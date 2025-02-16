@@ -1,0 +1,247 @@
+// prisma/schema.prisma
+
+// Remove this generator as it's not needed
+// generator seed {
+//   provider = "ts-node"
+//   require = ["tsconfig-paths/register"]
+// }
+
+// Keep only these generators
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root@localhost:3306/doc_connect?pool_max_connections=20&pool_min_connections=5&pool_idle_timeout=30&pool_acquire_timeout=10"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// Enums used in the models
+enum AppointmentStatus {
+  pending
+  confirmed
+  rejected
+}
+
+enum AppointmentType {
+  SUR_TERRAIN @map("Sur terrain")
+  DISTANCE
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum Role {
+  Doctor
+  Patient
+  Admin
+}
+
+/// The User model (maps to the "users" table)
+model User {
+  id                Int      @id @default(autoincrement()) @map("UserID")
+  firstName         String?  @map("FirstName")
+  lastName          String?  @map("LastName")
+  username          String   @unique @map("Username")
+  password          String   @map("Password")
+  email             String   @unique @map("Email")
+  role              Role     @map("Role")
+  locationLatitude  Decimal? @map("LocationLatitude")
+  locationLongitude Decimal? @map("LocationLongitude")
+  bio               String?  @map("Bio") @db.Text
+  meetingPrice      Decimal? @map("MeetingPrice")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // One-to-one relations (reverse side)
+  doctorProfile  Doctor?    @relation("UserDoctor")
+  patientProfile Patient?   @relation("UserPatient")
+  specialty      Specialty? @relation("UserSpecialty")
+  profilePicture Media?     @relation("UserProfilePicture")
+
+  // One-to-many relations
+  sentMessages        ChatroomMessage[] @relation("SenderMessages")
+  patientAppointments Appointment[]     @relation("PatientAppointments")
+  doctorAppointments  Appointment[]     @relation("DoctorAppointments")
+
+  @@map("users")
+}
+
+/// The Appointment model (maps to "appointments")
+model Appointment {
+  id              Int               @id @default(autoincrement()) @map("AppointmentID")
+  patientID       Int               @map("PatientID")
+  doctorID        Int               @map("DoctorID")
+  appointmentDate DateTime          @map("AppointmentDate")
+  durationMinutes Int               @map("DurationMinutes")
+  status          AppointmentStatus @default(pending) @map("Status")
+  type            AppointmentType?  @map("Type")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations: both foreign keys reference the User table
+  patient User @relation("PatientAppointments", fields: [patientID], references: [id])
+  doctor  User @relation("DoctorAppointments", fields: [doctorID], references: [id])
+
+  @@map("appointments")
+}
+
+/// The Availability model (maps to "availability")
+model Availability {
+  id            Int      @id @default(autoincrement()) @map("AvailabilityID")
+  doctorID      Int      @map("DoctorID")
+  availableDate DateTime @map("AvailableDate") // Originally DATEONLY
+  startTime     String   @map("StartTime")
+  endTime       String   @map("EndTime")
+  isAvailable   Boolean  @default(true) @map("IsAvailable")
+
+  doctor Doctor @relation(fields: [doctorID], references: [id])
+
+  @@map("availability")
+}
+
+/// The Chatrooms model (maps to "Chatrooms")
+model Chatrooms {
+  id        Int      @id @default(autoincrement()) @map("ChatroomID")
+  patientID Int      @map("PatientID")
+  doctorID  Int      @map("DoctorID")
+  startTime DateTime @default(now()) @map("StartTime")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations: PatientID and DoctorID reference the Patient and Doctor models
+  patient  Patient           @relation(fields: [patientID], references: [id])
+  doctor   Doctor            @relation(fields: [doctorID], references: [id])
+  messages ChatroomMessage[]
+
+  @@map("Chatrooms")
+}
+
+/// The ChatroomMessage model (maps to "ChatroomMessages")
+model ChatroomMessage {
+  id          Int      @id @default(autoincrement()) @map("MessageID")
+  chatroomID  Int      @map("ChatroomID")
+  senderID    Int      @map("SenderID")
+  messageText String   @map("MessageText")
+  sentAt      DateTime @default(now()) @map("SentAt")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chatroom Chatrooms @relation(fields: [chatroomID], references: [id])
+  sender   User      @relation("SenderMessages", fields: [senderID], references: [id])
+
+  @@map("ChatroomMessages")
+}
+
+/// The Doctor model (maps to "Doctors")
+model Doctor {
+  id                Int      @id @default(autoincrement())
+  userId            Int?     @unique // Added @unique for one-to-one relation
+  firstName         String   @map("firstName")
+  lastName          String   @map("lastName")
+  email             String   @unique @map("email")
+  password          String   @map("Password")
+  phone             String   @unique @map("phone")
+  specialty         String   @map("specialty")
+  experience        Int      @map("experience")
+  bio               String?  @map("bio") @db.Text
+  profilePicture    String?  @map("profilePicture")
+  isVerified        Boolean  @default(false) @map("isVerified")
+  locationLatitude  Decimal? @map("LocationLatitude")
+  locationLongitude Decimal? @map("LocationLongitude")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // One-to-one relation to User
+  user User? @relation("UserDoctor", fields: [userId], references: [id])
+
+  // One-to-many relations
+  availabilities Availability[]
+  chatrooms      Chatrooms[]
+  doctorReviews  DoctorReview[]
+
+  // One-to-one profile picture relation from Media
+  profileMedia Media? @relation("DoctorProfilePicture")
+
+  @@map("Doctors")
+}
+
+/// The Patient model (maps to "Patients")
+model Patient {
+  id                Int      @id @default(autoincrement())
+  userId            Int?     @unique // Added @unique for one-to-one relation
+  firstName         String   @map("firstName")
+  lastName          String   @map("lastName")
+  email             String   @unique @map("email")
+  phone             String   @unique @map("phone")
+  dateOfBirth       DateTime @map("dateOfBirth")
+  gender            Gender   @map("gender")
+  profilePicture    String?  @map("profilePicture")
+  medicalHistory    String?  @map("medicalHistory") @db.Text
+  locationLatitude  Decimal? @map("LocationLatitude")
+  locationLongitude Decimal? @map("LocationLongitude")
+  password          String   @map("Password")
+  bio               String?  @map("bio") @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // One-to-one relation to User
+  user User? @relation("UserPatient", fields: [userId], references: [id])
+
+  // One-to-many relations
+  chatrooms     Chatrooms[]
+  doctorReviews DoctorReview[]
+
+  // One-to-one profile picture relation from Media
+  profileMedia Media? @relation("PatientProfilePicture")
+
+  @@map("Patients")
+}
+
+/// The DoctorReview model (maps to "DoctorReview")
+model DoctorReview {
+  id         Int      @id @default(autoincrement()) @map("ReviewID")
+  doctorID   Int      @map("DoctorID")
+  patientID  Int      @map("PatientID")
+  rating     Int      @map("Rating")
+  comment    String?  @map("comment")
+  reviewText String?  @map("ReviewText")
+  reviewDate DateTime @map("ReviewDate")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  doctor  Doctor  @relation(fields: [doctorID], references: [id])
+  patient Patient @relation(fields: [patientID], references: [id])
+
+  @@map("DoctorReview")
+}
+
+/// The Media model (maps to "Media")
+model Media {
+  id        Int    @id @default(autoincrement())
+  userID    Int?   @unique @map("UserID") // Added @unique
+  doctorId  Int?   @unique // Added @unique
+  patientId Int?   @unique // Added @unique
+  url       String
+
+  user    User?    @relation("UserProfilePicture", fields: [userID], references: [id])
+  doctor  Doctor?  @relation("DoctorProfilePicture", fields: [doctorId], references: [id])
+  patient Patient? @relation("PatientProfilePicture", fields: [patientId], references: [id])
+
+  @@map("Media")
+}
+
+/// The Specialty model (maps to "Specialty")
+model Specialty {
+  id        Int      @id @default(autoincrement())
+  name      String
+  userId    Int?     @unique // Added @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation("UserSpecialty", fields: [userId], references: [id])
+
+  @@map("Specialty")
+}
