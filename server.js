@@ -20,36 +20,33 @@ const io = new Server(server, {
         origin: ["http://localhost:3000", "http://localhost:3002"],
         methods: ["GET", "POST"],
         credentials: true,
-        transports: ['websocket', 'polling']
+        transports: ['websocket']
     },
-    allowEIO3: true,
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000
+    allowEIO3: true
 });
 
 io.on('connection', (socket) => {
     console.log('New connection:', socket.id);
 
-    socket.on('join-room', (roomId) => {
+    socket.on('join-room', ({ roomId, userName }) => {
         socket.join(roomId);
         socket.to(roomId).emit('user-joined', socket.id);
-        console.log(`User ${socket.id} joined room ${roomId}`);
+        console.log(`User ${userName} (${socket.id}) joined room ${roomId}`);
     });
 
-    socket.on('send-message', ({ message, room }) => {
-        socket.to(room).emit('message', message);
+    socket.on('send-message', ({ message, roomId }) => {
+        socket.to(roomId).emit('message', message);
+        console.log(`Message sent to room ${roomId}:`, message);
     });
 
     socket.on('offer', ({ signal, room }) => {
-        socket.to(room).emit('offer', signal);
+        socket.to(room).emit('offer', { signal, from: socket.id });
+        console.log(`Offer sent to room ${room} from ${socket.id}`);
     });
 
     socket.on('answer', ({ signal, room }) => {
-        socket.to(room).emit('answer', signal);
+        socket.to(room).emit('answer', { signal, from: socket.id });
+        console.log(`Answer sent to room ${room} from ${socket.id}`);
     });
 
     socket.on('disconnect', () => {
