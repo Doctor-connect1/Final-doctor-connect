@@ -8,13 +8,13 @@ export async function GET(
   { params }: { params: { patientId: string } }
 ) {
   try {
-    const { patientId } = params;
+    const { patientId } = await params;
     const parsedId = parseInt(patientId);
 
     if (isNaN(parsedId)) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Invalid patient ID' 
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid patient ID'
       }, { status: 400 });
     }
 
@@ -24,10 +24,10 @@ export async function GET(
       },
       include: {
         doctor: {
-          include: {        
-        
+          include: {
+
             specialty: true,
-          
+
           }
         }
       },
@@ -38,13 +38,13 @@ export async function GET(
 
     return NextResponse.json(
       appointments
-    , { status: 200 });
+      , { status: 200 });
 
   } catch (error) {
     console.error('Error fetching appointments:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to fetch appointments' 
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch appointments'
     }, { status: 500 });
   } finally {
     await prisma.$disconnect();
