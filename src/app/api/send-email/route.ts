@@ -1,22 +1,18 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import nodemailer from 'nodemailer';
-
 export async function POST(request: Request) {
   const { firstName, lastName, email, phone, topic, message } = await request.json();
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: "zeinebbouganmi89@gmail.com",  
+    pass: "urac msax mzlj ogvu",  
+  },
+});
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL, // Make sure EMAIL is defined in .env
-      
-      pass: process.env.PASSWORD, // Ensure PASSWORD is set correctly as well
-    },
-  });
 
   const mailOptions = {
-    from: process.env.EMAIL,  // Ensure this is set properly
-    to: process.env.EMAIL,    // The recipient should be the same as 'from', or a different valid address
+    from: "zeinebboughanmi89@gmail.com",
+    to: "zeinebboughanmi89@gmail.com",
     subject: `New Contact Form Submission: ${topic}`,
     html: `
       <h2>New Contact Form Submission</h2>
@@ -38,5 +34,6 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ message: 'Failed to send email' }), {
       status: 500,
     });
+    throw error
   }
-}
+} 
