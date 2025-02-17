@@ -9,7 +9,7 @@
 // Keep only these generators
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:root@localhost:3306/doc_connect?pool_max_connections=20&pool_min_connections=5&pool_idle_timeout=30&pool_acquire_timeout=10"
+  url      = "mysql://root:root@localhost:3306/doctor_connect?pool_max_connections=20&pool_min_connections=5&pool_idle_timeout=30&pool_acquire_timeout=10"
 }
 
 generator client {
@@ -170,22 +170,22 @@ model Doctor {
 
 /// The Patient model (maps to "Patients")
 model Patient {
-  id                Int      @id @default(autoincrement())
-  userId            Int?     @unique // Added @unique for one-to-one relation
-  firstName         String   @map("firstName")
-  lastName          String   @map("lastName")
-  email             String   @unique @map("email")
-  phone             String   @unique @map("phone")
-  dateOfBirth       DateTime @map("dateOfBirth")
-  gender            Gender   @map("gender")
-  profilePicture    String?  @map("profilePicture")
-  medicalHistory    String?  @map("medicalHistory") @db.Text
-  locationLatitude  Decimal? @map("LocationLatitude")
-  locationLongitude Decimal? @map("LocationLongitude")
-  password          String   @map("Password")
-  bio               String?  @map("bio") @db.Text
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                Int       @id @default(autoincrement())
+  userId            Int?      @unique // Added @unique for one-to-one relation
+  firstName         String    @map("firstName")
+  lastName          String    @map("lastName")
+  email             String    @unique @map("email")
+  phone             String    @unique @map("phone")
+  dateOfBirth       DateTime? @map("dateOfBirth")
+  gender            Gender?   @map("gender")
+  profilePicture    String?   @map("profilePicture")
+  medicalHistory    String?   @map("medicalHistory") @db.Text
+  locationLatitude  Decimal?  @map("LocationLatitude")
+  locationLongitude Decimal?  @map("LocationLongitude")
+  password          String    @map("Password")
+  bio               String?   @map("bio") @db.Text
+  createdAt         DateTime? @default(now())
+  updatedAt         DateTime? @updatedAt
 
   // One-to-one relation to User
   user User? @relation("UserPatient", fields: [userId], references: [id])

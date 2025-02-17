@@ -1,7 +1,41 @@
+'use client';
 import React from 'react';
 import Navbar from '@/components/Home/Navbar';
 
 export default function ContactUs() {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          topic: data.topic,
+          message: data.message
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const result = await response.json();
+      alert(result.message || 'Message sent successfully!');
+    } catch (error) {
+      alert('Failed to send message. Please try again.');
+    }
+  };
+
   return (
     <div className="flex flex-col">
       <Navbar />
@@ -12,14 +46,15 @@ export default function ContactUs() {
           className="w-full h-auto max-h-65 object-cover mb-4"
         />
         <h1 className="text-1xl font-bold mb-3">Get In Touch</h1>
-        <h1 className='text-4xl font-bold mb-2'>Contact Us</h1>
+        <h1 className='text-3xl font-bold mb-2'>Contact Us</h1>
         <p className="mb-8 text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-        <form className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <form className="w-full max-w-3xl bg-white p-8 rounded-lg shadow-md" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div className="flex flex-col">
               <label className="mb-2">First Name</label>
               <input 
                 type="text" 
+                name="firstName"
                 placeholder="Enter your first name" 
                 className="border border-teal-600 p-3 rounded-lg w-full"
               />
@@ -28,6 +63,7 @@ export default function ContactUs() {
               <label className="mb-2">Last Name</label>
               <input 
                 type="text" 
+                name="lastName"
                 placeholder="Enter your last name" 
                 className="border border-teal-600 p-3 rounded-lg w-full"
               />
@@ -38,6 +74,7 @@ export default function ContactUs() {
               <label className="mb-2">Email</label>
               <input 
                 type="email" 
+                name="email"
                 placeholder="Enter your email" 
                 className="border border-teal-600 p-3 rounded-lg w-full"
               />
@@ -46,6 +83,7 @@ export default function ContactUs() {
               <label className="mb-2">Phone Number</label>
               <input 
                 type="tel" 
+                name="phone"
                 placeholder="Enter your phone number" 
                 className="border border-teal-600 p-3 rounded-lg w-full"
               />
@@ -53,7 +91,7 @@ export default function ContactUs() {
           </div>
           <div className="flex flex-col mb-4">
             <label className="mb-2">Choose a topic</label>
-            <select className="border border-teal-600 p-3 rounded-lg w-full">
+            <select name="topic" className="border border-teal-600 p-3 rounded-lg w-full">
               <option>Select one...</option>
               <option>General Inquiry</option>
               <option>Support</option>
@@ -63,6 +101,7 @@ export default function ContactUs() {
           <div className="flex flex-col mb-4">
             <label className="mb-2">Message</label>
             <textarea 
+              name="message"
               placeholder="Type your message..." 
               className="border border-teal-600 p-3 rounded-lg w-full"
               rows={4} 

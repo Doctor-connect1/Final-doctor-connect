@@ -3,41 +3,55 @@
 import { useState, useEffect } from 'react';
 import { User, Activity } from 'lucide-react';
 
-interface ProfileProps {
-  updateProfile: (data: {
-    firstName?: string;
-    lastName?: string;
-    height?: string;
-    weight?: string;
-    profilePhoto?: string;
-  }) => void;
-  initialData: {
-    firstName: string;
-    lastName: string;
-    height: string;
-    weight: string;
-    profilePhoto: string;
+interface ProfileData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: string;
+  medicalHistory: string;
+  bio: string;
+  profileMedia?: {
+    url: string;
   };
+}
+
+interface ProfileProps {
+  updateProfile: (data: Partial<ProfileData>) => void;
+  initialData: ProfileData;
   updateNavbarName: (name: string) => void;
 }
 
 export default function Profile({ updateProfile, initialData, updateNavbarName }: ProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: initialData?.firstName || '',
-    lastName: initialData?.lastName || '',
-    height: initialData?.height || '',
-    weight: initialData?.weight || '',
-    profilePhoto: initialData?.profilePhoto || '',
-  });
+  const [formData, setFormData] = useState<ProfileData>(initialData);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    updateProfile(formData);
-    updateNavbarName(`${formData.firstName} ${formData.lastName}`);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      await updateProfile({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        medicalHistory: formData.medicalHistory,
+        bio: formData.bio
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Update local form data when initialData changes
+  useEffect(() => {
+    setFormData(initialData);
+  }, [initialData]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -53,9 +67,12 @@ export default function Profile({ updateProfile, initialData, updateNavbarName }
           {isEditing ? (
             <button 
               onClick={handleSave}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              disabled={isSaving}
+              className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
+                isSaving ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
           ) : (
             <button 
@@ -68,6 +85,22 @@ export default function Profile({ updateProfile, initialData, updateNavbarName }
         </div>
 
         <div className="space-y-6">
+          {/* Profile Image */}
+          <div className="flex items-center">
+            <User className="h-6 w-6 text-blue-600" />
+            <div className="ml-3 flex-1">
+              <p className="text-sm text-gray-500">Profile Photo</p>
+              {formData.profileMedia?.url && (
+                <img 
+                  src={formData.profileMedia.url} 
+                  alt="Profile" 
+                  className="h-20 w-20 rounded-full object-cover mt-2"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Basic Information */}
           <div className="flex items-center">
             <User className="h-6 w-6 text-blue-600" />
             <div className="ml-3 flex-1">
@@ -105,16 +138,42 @@ export default function Profile({ updateProfile, initialData, updateNavbarName }
           <div className="flex items-center">
             <User className="h-6 w-6 text-blue-600" />
             <div className="ml-3 flex-1">
-              <p className="text-sm text-gray-500">Height</p>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="font-medium">{formData.email}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <User className="h-6 w-6 text-blue-600" />
+            <div className="ml-3 flex-1">
+              <p className="text-sm text-gray-500">Phone</p>
               {isEditing ? (
                 <input
-                  name="height"
-                  value={formData.height}
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
                   className="border rounded p-2 w-full mt-1"
                 />
               ) : (
-                <p className="font-medium">{formData.height}</p>
+                <p className="font-medium">{formData.phone}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <Activity className="h-6 w-6 text-blue-600" />
+            <div className="ml-3 flex-1">
+              <p className="text-sm text-gray-500">Medical History</p>
+              {isEditing ? (
+                <textarea
+                  name="medicalHistory"
+                  value={formData.medicalHistory}
+                  onChange={handleChange}
+                  className="border rounded p-2 w-full mt-1"
+                  rows={4}
+                />
+              ) : (
+                <p className="font-medium">{formData.medicalHistory}</p>
               )}
             </div>
           </div>
@@ -122,33 +181,17 @@ export default function Profile({ updateProfile, initialData, updateNavbarName }
           <div className="flex items-center">
             <User className="h-6 w-6 text-blue-600" />
             <div className="ml-3 flex-1">
-              <p className="text-sm text-gray-500">Weight</p>
+              <p className="text-sm text-gray-500">Bio</p>
               {isEditing ? (
-                <input
-                  name="weight"
-                  value={formData.weight}
+                <textarea
+                  name="bio"
+                  value={formData.bio}
                   onChange={handleChange}
                   className="border rounded p-2 w-full mt-1"
+                  rows={4}
                 />
               ) : (
-                <p className="font-medium">{formData.weight}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <User className="h-6 w-6 text-blue-600" />
-            <div className="ml-3 flex-1">
-              <p className="text-sm text-gray-500">Profile Photo URL</p>
-              {isEditing ? (
-                <input
-                  name="profilePhoto"
-                  value={formData.profilePhoto}
-                  onChange={handleChange}
-                  className="border rounded p-2 w-full mt-1"
-                />
-              ) : (
-                <img src={formData.profilePhoto} alt="Profile" className="h-10 w-10 rounded-full" />
+                <p className="font-medium">{formData.bio}</p>
               )}
             </div>
           </div>
