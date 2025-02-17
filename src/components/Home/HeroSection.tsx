@@ -1,6 +1,10 @@
+"use client";
 import Image from 'next/image';
+import { useState } from 'react';
 
 export default function HeroSection() {
+  const [showVideo, setShowVideo] = useState(false);
+
   return (
     <section className="container mx-auto px-4 py-12 md:py-20">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -20,7 +24,10 @@ export default function HeroSection() {
             <button className="bg-teal-600 text-white px-6 py-3 rounded-md hover:bg-teal-700">
               Appointments
             </button>
-            <button className="flex items-center gap-2 border border-teal-600 text-teal-600 px-6 py-3 rounded-md hover:bg-teal-50">
+            <button 
+              onClick={() => setShowVideo(true)}
+              className="flex items-center gap-2 border border-teal-600 text-teal-600 px-6 py-3 rounded-md hover:bg-teal-50"
+            >
               <span>Watch Video</span>
               <span>▶</span>
             </button>
@@ -52,6 +59,30 @@ export default function HeroSection() {
             </div> */}
           </div>
         </div>
+
+        {/* Video Modal */}
+        {showVideo && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+            onClick={() => setShowVideo(false)}
+          >
+            <div className="w-full max-w-4xl relative">
+              <button 
+                className="absolute -top-8 right-0 text-white text-2xl"
+                onClick={() => setShowVideo(false)}
+              >
+                &times;
+              </button>
+              <iframe
+                className="w-full aspect-video rounded-lg"
+                src="https://www.youtube.com/embed/74DWwSxsVSs?autoplay=1&mute=0"
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

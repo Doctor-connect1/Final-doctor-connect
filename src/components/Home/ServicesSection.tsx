@@ -113,15 +113,6 @@ export default function ServicesSection() {
               {...service}
             />
           ))}
-          
-          <Link href="/video" className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-xl font-semibold mb-4 text-teal-600">
-              Video Consultation
-            </div>
-            <p className="text-gray-600">
-              Connect with doctors through secure video calls for remote consultations.
-            </p>
-          </Link>
         </div>
       </div>
     </section>

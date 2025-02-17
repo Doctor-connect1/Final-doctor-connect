@@ -6,14 +6,14 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
-  const [role, setRole] = useState(null); // State to store the role
+  const [role, setRole] = useState<string | null>(null); // State to store the role
   const pathname = usePathname();
 
   // Fetch the role from localStorage when the component mounts
   useEffect(() => {
-    const storedRole = localStorage.getItem("role");
+    const storedRole = localStorage.getItem("role"); // No need to use `|| null`, as localStorage returns `null` if the key doesn't exist
     setRole(storedRole);
-  }, []); // Empty dependency array to run this once when the component mounts
+  }, []); // Empty dependency array ensures this runs once when the component mounts
 
   return (
     <nav className="bg-white py-4 px-6 shadow-sm">
@@ -32,15 +32,11 @@ export default function Navbar() {
           {/* Conditionally render Home link */}
           <Link
             href="/"
-            className={`relative ${pathname === "/"
-              ? "text-teal-600"
-              : "text-gray-600 hover:text-teal-600"
-              }`}
+            className={`relative ${pathname === "/" ? "text-teal-600" : "text-gray-600 hover:text-teal-600"}`}
           >
             Home
             <span
-              className={`absolute bottom-0 left-0 w-full h-0.5 bg-teal-600 transform origin-left transition-transform duration-300 ${pathname === "/" ? "scale-x-100" : "scale-x-0"
-                }`}
+              className={`absolute bottom-0 left-0 w-full h-0.5 bg-teal-600 transform origin-left transition-transform duration-300 ${pathname === "/" ? "scale-x-100" : "scale-x-0"}`}
             ></span>
           </Link>
 
@@ -52,19 +48,15 @@ export default function Navbar() {
           {/* Conditionally render Contact Us link */}
           <Link
             href="/contact"
-            className={`relative ${pathname === "/contact"
-              ? "text-teal-600"
-              : "text-gray-600 hover:text-teal-600"
-              }`}
+            className={`relative ${pathname === "/contact" ? "text-teal-600" : "text-gray-600 hover:text-teal-600"}`}
           >
             Contact Us
             <span
-              className={`absolute bottom-0 left-0 w-full h-0.5 bg-teal-600 transform origin-left transition-transform duration-300 ${pathname === "/contact" ? "scale-x-100" : "scale-x-0"
-                }`}
+              className={`absolute bottom-0 left-0 w-full h-0.5 bg-teal-600 transform origin-left transition-transform duration-300 ${pathname === "/contact" ? "scale-x-100" : "scale-x-0"}`}
             ></span>
           </Link>
 
-          {/* Conditionally render Help and Blogs links */}
+          {/* Help and Blogs links */}
           <Link href="/help" className="text-gray-600 hover:text-teal-600">
             Help
           </Link>
