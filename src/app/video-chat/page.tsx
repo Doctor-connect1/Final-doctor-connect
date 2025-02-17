@@ -37,7 +37,7 @@ export default function VideoChat() {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:4000', {
+    const newSocket = io('http://192.168.11.12:4000', {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -149,10 +149,21 @@ export default function VideoChat() {
     setIsLoading(true);
 
     try {
+      console.log('Checking media devices...');
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      console.log('Available video devices:', videoDevices);
+
       console.log('Requesting media stream...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: true
+      }).catch(error => {
+        console.error('getUserMedia error:', error.name, error.message);
+        throw new Error(`Camera access failed: ${error.message}`);
       });
       
       console.log('Got media stream tracks:', mediaStream.getTracks());
@@ -160,7 +171,10 @@ export default function VideoChat() {
       if (localVideoRef.current) {
         console.log('Setting local video source');
         localVideoRef.current.srcObject = mediaStream;
-        await localVideoRef.current.play().catch(e => console.error('Play error:', e));
+        await localVideoRef.current.play().catch(e => {
+          console.error('Video play error:', e);
+          throw new Error('Failed to play video stream');
+        });
         console.log('Local video playing');
         
         setStream(mediaStream);
@@ -171,7 +185,7 @@ export default function VideoChat() {
       }
     } catch (error) {
       console.error('Error in joinRoom:', error);
-      alert('Failed to start video. Please refresh and try again.');
+      alert(`Failed to start video: ${error.message}. Please check camera permissions and try again.`);
       setIsJoined(false);
     } finally {
       setIsLoading(false);
