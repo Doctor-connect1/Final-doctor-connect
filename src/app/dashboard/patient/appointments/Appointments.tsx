@@ -71,7 +71,6 @@ const Appointments = () => {
           throw new Error('Failed to fetch doctors');
         }
         const doctorsData = await doctorsResponse.json();
-        console.log('Doctors data:', doctorsData);
 
         // Then fetch appointments
         const appointmentsResponse = await fetch(`/api/patient/appointments/${decodedToken.patientId}`);
@@ -80,7 +79,6 @@ const Appointments = () => {
         }
 
         const appointmentsData = await appointmentsResponse.json();
-        console.log('Appointments data:', appointmentsData);
 
         // Merge appointments with complete doctor information
         const enhancedAppointments = appointmentsData.map((appointment: Appointment) => {

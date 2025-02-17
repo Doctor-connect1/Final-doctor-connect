@@ -14,7 +14,7 @@
           <SideNavigation />
           <div className="flex-1 ml-32">
             <div className="min-h-screen bg-gray-50 rounded-l-[40px] p-8">
-    D */}
+   
               <main className="mt-8">{children}</main>
             </div>
           </div>
