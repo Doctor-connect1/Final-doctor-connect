@@ -9,7 +9,7 @@
 // Keep only these generators
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:root@localhost:3306/doc_connect?pool_max_connections=20&pool_min_connections=5&pool_idle_timeout=30&pool_acquire_timeout=10"
+  url      = "mysql://root:root@localhost:3306/doctor_connect?pool_max_connections=20&pool_min_connections=5&pool_idle_timeout=30&pool_acquire_timeout=10"
 }
 
 generator client {
