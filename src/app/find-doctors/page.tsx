@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
-import { Search, MapPin, Star, Phone } from 'lucide-react';
+import { Search, MapPin, Star, Phone, Video, MessageCircle } from 'lucide-react';
 import Navbar from '@/components/Home/Navbar';
 import Footer from '@/components/Home/Footer';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -105,9 +105,9 @@ export default function FindDoctors() {
                 onClick={() => {
                   setSelectedDoctor(doctor);
                   if (doctor.locationLatitude && doctor.locationLongitude) {
-                    mapRef.current?.panTo({ 
-                      lat: parseFloat(doctor.locationLatitude.toString()), 
-                      lng: parseFloat(doctor.locationLongitude.toString()) 
+                    mapRef.current?.panTo({
+                      lat: parseFloat(doctor.locationLatitude.toString()),
+                      lng: parseFloat(doctor.locationLongitude.toString())
                     });
                   }
                 }}
@@ -122,6 +122,24 @@ export default function FindDoctors() {
                     <div className="flex items-center mt-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
                       <span className="ml-1 text-sm text-black">Experience: {doctor.experience} years</span>
+                    </div>
+
+                    {/* Call and Video Call Icons */}
+                    <div className="flex space-x-4 mt-2">
+                      <button
+                        className="flex items-center text-blue-600 hover:text-blue-800"
+                        onClick={() => alert(`Calling ${doctor.phone}`)} // Add logic to handle phone calls
+                      >
+                        <MessageCircle className="h-5 w-5 mr-1" />
+                        MSG
+                      </button>
+                      <button
+                        className="flex items-center text-green-600 hover:text-green-800"
+                        onClick={() => alert(`Video calling ${doctor.firstName} ${doctor.lastName}`)} // Add logic for video call
+                      >
+                        <Video className="h-5 w-5 mr-1" />
+                        Video Call
+                      </button>
                     </div>
                   </div>
                 </div>
