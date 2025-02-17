@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --experimental-https -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -29,6 +29,7 @@
     "@shadcn/ui": "^0.0.4",
     "@types/formidable": "^3.4.5",
     "@types/google-maps": "^3.2.6",
+    "@types/react-modal": "^3.16.3",
     "@types/simple-peer": "^9.11.8",
     "@types/socket.io": "^3.0.1",
     "bcryptjs": "^2.4.3",
