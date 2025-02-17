@@ -14,16 +14,15 @@ const SignupFinishPage = () => {
     const lastName = searchParams.get('lastName');
     const password = searchParams.get('password');
     const role = searchParams.get('role');
+    console.log("role", role);
+    console.log("email", email);
 
-    // Always call hooks in the same order
     const [phone, setPhone] = useState("");
-    const [specialty, setSpecialty] = useState("");
-    const [experience, setExperience] = useState("");
     const [bio, setBio] = useState("");
-    const [dateOfBirth, setDateOfBirth] = useState("");
+    const [dateOfBirth, setDateOfBirth] = useState("2016-11-30T04:15:01.912Z");
     const [medicalHistory, setMedicalHistory] = useState("");
     const [gender, setGender] = useState("");
-    const [profilePicture, setProfilePicture] = useState<File | null>(null);
+    const [profilePicture, setProfilePicture] = useState<string | null>(null)
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -40,51 +39,39 @@ const SignupFinishPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (role === "doctor" && (!phone || !specialty || !experience || !bio || !gender || !profilePicture)) {
-            setError("Please fill in all the fields for doctor.");
-            return;
-        }
+        const userData = {
+            email: email as string,
+            username: username as string,
+            firstName: firstName as string,
+            lastName: lastName as string,
+            password: password as string,
+            role: role as string,
+            phone,
+            bio,
+            gender,
+            dateOfBirth,
+            medicalHistory,
+            profilePicture,
+        };
 
-        if (role === "patient" && (!dateOfBirth || !medicalHistory || !gender || !phone || !bio || !profilePicture)) {
-            setError("Please fill in all the fields for patient.");
-            return;
-        }
-
-        // Create a FormData object to send the form data and file
-        const formData = new FormData();
-        formData.append("email", email as string);
-        formData.append("username", username as string);
-        formData.append("firstName", firstName as string);
-        formData.append("lastName", lastName as string);
-        formData.append("password", password as string);
-        formData.append("role", role as string);
-        formData.append("phone", phone);
-        formData.append("bio", bio);
-        formData.append("gender", gender);
-
-        if (role === "doctor") {
-            formData.append("specialty", specialty);
-            formData.append("experience", experience);
-        } else if (role === "patient") {
-            formData.append("dateOfBirth", dateOfBirth);
-            formData.append("medicalHistory", medicalHistory);
-        }
-
-        if (profilePicture) {
-            formData.append("profilePicture", profilePicture); // Append the file
-        }
+        console.log("User Data: ", userData);
 
         try {
-            const response = await fetch('/api/auth/signup', {
+            const response = await fetch('/api/auth/finitousign', {
                 method: 'POST',
-                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),  // Send the data as JSON
             });
 
             const result = await response.json();
 
             if (response.ok) {
                 // Handle success (e.g., redirect to a success page)
-                router.push("/success");
+                localStorage.setItem('token', result.token);
+                localStorage.setItem('role', result.role);
+                router.push("/");
             } else {
                 setError(result.message || "Error during signup");
             }
@@ -134,41 +121,12 @@ const SignupFinishPage = () => {
                         <div>
                             <input
                                 type="file"
-                                onChange={(e) => setProfilePicture(e.target.files![0])}
+                                onChange={(e) => setProfilePicture(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                             />
                         </div>
 
-                        {/* Conditional fields based on role */}
-                        {role === "doctor" && (
-                            <>
-                                {/* Specialty */}
-                                <div>
-                                    <input
-                                        name="specialty"
-                                        type="text"
-                                        value={specialty}
-                                        onChange={(e) => setSpecialty(e.target.value)}
-                                        placeholder="Specialty"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-
-                                {/* Experience */}
-                                <div>
-                                    <input
-                                        name="experience"
-                                        type="text"
-                                        value={experience}
-                                        onChange={(e) => setExperience(e.target.value)}
-                                        placeholder="Experience"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {role === "patient" && (
+                        {role === "Patient" && (
                             <>
                                 {/* Date of Birth */}
                                 <div>
@@ -176,7 +134,7 @@ const SignupFinishPage = () => {
                                         name="dateOfBirth"
                                         type="date"
                                         value={dateOfBirth}
-                                        onChange={(e) => setDateOfBirth(e.target.value)}
+                                        onChange={(e) => setDateOfBirth(e.target.value)}  // Ensure this updates the state correctly
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                                     />
                                 </div>
@@ -203,9 +161,8 @@ const SignupFinishPage = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 <option value="">Select Gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
                             </select>
                         </div>
                     </div>
@@ -216,7 +173,7 @@ const SignupFinishPage = () => {
                             type="submit"
                             className="w-full py-2 px-4 bg-green-500 text-white rounded-md font-medium shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
                         >
-                            Submit
+                            Signup
                         </button>
                     </div>
                 </form>
@@ -226,4 +183,3 @@ const SignupFinishPage = () => {
 };
 
 export default SignupFinishPage;
-
