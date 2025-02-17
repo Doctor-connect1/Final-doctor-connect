@@ -37,21 +37,37 @@ export default function VideoChat() {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const newSocket = io('http://192.168.11.12:4000', {
-      transports: ['websocket'],
+    const socketUrl = 'https://192.168.11.12:4000';  // Use fixed IP for all connections
+
+    const newSocket = io(socketUrl, {
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      timeout: 10000
+      timeout: 20000,
+      forceNew: true,
+      secure: true,
+      rejectUnauthorized: false,
+      auth: {
+        token: 'any'  // Add basic auth
+      }
     });
 
     newSocket.on('connect', () => {
-      console.log('Connected to socket server:', newSocket.id);
+      console.log('Socket connected:', {
+        id: newSocket.id,
+        url: socketUrl,
+        transport: newSocket.io.engine.transport.name
+      });
       setIsReconnecting(false);
     });
 
-    newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+    newSocket.on('connect_error', (err: any) => {
+      console.error('Socket connection error:', {
+        message: err && err.message ? err.message : 'Unknown error',
+        type: err && err.type ? err.type : 'Unknown type',
+        description: err && err.description ? err.description : 'No description'
+      });
       setIsReconnecting(true);
     });
 
@@ -69,7 +85,39 @@ export default function VideoChat() {
 
     socket.on('user-joined', (userId: string) => {
       console.log('User joined:', userId);
-      initializeCall(true);
+      // Initialize peer for second user
+      if (stream) {
+        const newPeer = new Peer({
+          initiator: false,
+          stream: stream,
+          trickle: false,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+          }
+        });
+
+        newPeer.on('signal', (signal) => {
+          console.log('Peer signaling, sending answer');
+          socket.emit('answer', { signal, room: roomId });
+        });
+
+        newPeer.on('connect', () => {
+          console.log('Peer connection established!');
+        });
+
+        newPeer.on('stream', (remoteStream) => {
+          console.log('Received remote stream');
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+            remoteVideoRef.current.play().catch(e => console.error('Remote play error:', e));
+          }
+        });
+
+        setPeer(newPeer);
+      }
     });
 
     socket.on('offer', ({ signal, from }) => {
@@ -97,7 +145,7 @@ export default function VideoChat() {
       socket.off('answer');
       socket.off('message');
     };
-  }, [socket, peer]);
+  }, [socket, peer, stream, roomId]);
 
   // Cleanup function for media streams
   useEffect(() => {
@@ -149,11 +197,6 @@ export default function VideoChat() {
     setIsLoading(true);
 
     try {
-      console.log('Checking media devices...');
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      console.log('Available video devices:', videoDevices);
-
       console.log('Requesting media stream...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -162,8 +205,8 @@ export default function VideoChat() {
         },
         audio: true
       }).catch(error => {
-        console.error('getUserMedia error:', error.name, error.message);
-        throw new Error(`Camera access failed: ${error.message}`);
+        console.error('getUserMedia error:', error);
+        throw new Error('Failed to get media stream');
       });
       
       console.log('Got media stream tracks:', mediaStream.getTracks());
@@ -171,56 +214,65 @@ export default function VideoChat() {
       if (localVideoRef.current) {
         console.log('Setting local video source');
         localVideoRef.current.srcObject = mediaStream;
-        await localVideoRef.current.play().catch(e => {
+        try {
+          await localVideoRef.current.play();
+          console.log('Local video playing');
+        } catch (e) {
           console.error('Video play error:', e);
-          throw new Error('Failed to play video stream');
-        });
-        console.log('Local video playing');
+          throw new Error('Failed to play video');
+        }
         
+        // Set stream in state
         setStream(mediaStream);
+        
+        // Wait for stream to be set
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Join room and initialize peer
         socket.emit('join-room', { roomId, userName });
         setIsJoined(true);
-      } else {
-        throw new Error('Video element not found');
+        
+        // Create peer with stream
+        const newPeer = new Peer({
+          initiator: true,
+          stream: mediaStream,  // Use mediaStream directly
+          trickle: false,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+          }
+        });
+
+        console.log('Created new peer with stream:', !!mediaStream);
+
+        newPeer.on('signal', (signal) => {
+          console.log('Peer signaling, sending offer');
+          socket.emit('offer', { signal, room: roomId });
+        });
+
+        newPeer.on('connect', () => {
+          console.log('Peer connection established!');
+        });
+
+        newPeer.on('stream', (remoteStream) => {
+          console.log('Received remote stream');
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+            remoteVideoRef.current.play().catch(e => console.error('Remote play error:', e));
+          }
+        });
+
+        setPeer(newPeer);
       }
     } catch (error) {
       console.error('Error in joinRoom:', error);
-      alert(`Failed to start video: ${error.message}. Please check camera permissions and try again.`);
+      alert(`Failed to start video: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsJoined(false);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const initializeCall = (isInitiator: boolean) => {
-    if (!stream || !socket) return;
-
-    console.log('Initializing peer connection as initiator:', isInitiator);
-    
-    const newPeer = new Peer({
-      initiator: isInitiator,
-      stream: stream,
-      trickle: false,
-    });
-
-    newPeer.on('signal', (signal) => {
-      console.log('Generated signal:', signal);
-      if (isInitiator) {
-        socket.emit('offer', { signal, room: roomId });
-      } else {
-        socket.emit('answer', { signal, room: roomId });
-      }
-    });
-
-    newPeer.on('stream', (remoteStream) => {
-      console.log('Received remote stream');
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.play().catch(e => console.error('Remote play error:', e));
-      }
-    });
-
-    setPeer(newPeer);
   };
 
   const sendMessage = () => {
