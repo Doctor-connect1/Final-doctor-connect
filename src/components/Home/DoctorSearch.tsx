@@ -27,7 +27,7 @@ export default function DoctorSearch() {
         try {
           // Fetch all doctors matching the name and specialty, regardless of availability
           const response = await fetch(
-            `http://localhost:3001/api/dectors/search?name=${name}&specialty=${specialty}`
+            `http://localhost:3000/api/dectors/search?name=${name}&specialty=${specialty}`
           );
           const data = await response.json();
 
