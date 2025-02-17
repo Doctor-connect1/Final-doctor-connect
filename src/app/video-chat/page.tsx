@@ -31,6 +31,7 @@ export default function VideoChat() {
   const [videoQuality, setVideoQuality] = useState<'low' | 'medium' | 'high'>('medium');
   const [userName, setUserName] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isVideoElementReady, setIsVideoElementReady] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -66,16 +67,20 @@ export default function VideoChat() {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('user-joined', (userId) => {
+    socket.on('user-joined', (userId: string) => {
       console.log('User joined:', userId);
       initializeCall(true);
     });
 
-    socket.on('offer', (signal) => {
-      handleOffer(signal);
+    socket.on('offer', ({ signal, from }) => {
+      console.log('Received offer from:', from);
+      if (peer) {
+        peer.signal(signal);
+      }
     });
 
-    socket.on('answer', (signal) => {
+    socket.on('answer', ({ signal, from }) => {
+      console.log('Received answer from:', from);
       if (peer) {
         peer.signal(signal);
       }
@@ -105,6 +110,22 @@ export default function VideoChat() {
     };
   }, [stream]);
 
+  useEffect(() => {
+    // Debug log to check if refs are initialized
+    console.log('Video refs:', {
+      local: localVideoRef.current,
+      remote: remoteVideoRef.current
+    });
+  }, []);
+
+  // Add effect to monitor video element
+  useEffect(() => {
+    if (localVideoRef.current) {
+      setIsVideoElementReady(true);
+      console.log('Video element mounted');
+    }
+  }, []);
+
   const getVideoConstraints = () => {
     const constraints = {
       low: { width: 640, height: 480 },
@@ -121,32 +142,37 @@ export default function VideoChat() {
   };
 
   const joinRoom = async () => {
-    if (!socket || !roomId || !userName) return;
+    if (!socket || !roomId || !userName) {
+      console.error('Missing required data:', { socket, roomId, userName });
+      return;
+    }
     setIsLoading(true);
 
     try {
+      console.log('Requesting media stream...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user'
-        },
+        video: true,
         audio: true
       });
       
-      console.log('Got media stream:', mediaStream.getTracks());
+      console.log('Got media stream tracks:', mediaStream.getTracks());
       
       if (localVideoRef.current) {
+        console.log('Setting local video source');
         localVideoRef.current.srcObject = mediaStream;
-        localVideoRef.current.play().catch(e => console.error('Play error:', e));
+        await localVideoRef.current.play().catch(e => console.error('Play error:', e));
+        console.log('Local video playing');
+        
+        setStream(mediaStream);
+        socket.emit('join-room', { roomId, userName });
+        setIsJoined(true);
+      } else {
+        throw new Error('Video element not found');
       }
-      
-      setStream(mediaStream);
-      socket.emit('join-room', { roomId, userName });
-      setIsJoined(true);
     } catch (error) {
-      console.error('Error accessing media devices:', error);
-      alert('Failed to access camera/microphone. Please check permissions.');
+      console.error('Error in joinRoom:', error);
+      alert('Failed to start video. Please refresh and try again.');
+      setIsJoined(false);
     } finally {
       setIsLoading(false);
     }
@@ -155,13 +181,16 @@ export default function VideoChat() {
   const initializeCall = (isInitiator: boolean) => {
     if (!stream || !socket) return;
 
+    console.log('Initializing peer connection as initiator:', isInitiator);
+    
     const newPeer = new Peer({
       initiator: isInitiator,
-      stream,
+      stream: stream,
       trickle: false,
     });
 
     newPeer.on('signal', (signal) => {
+      console.log('Generated signal:', signal);
       if (isInitiator) {
         socket.emit('offer', { signal, room: roomId });
       } else {
@@ -170,18 +199,14 @@ export default function VideoChat() {
     });
 
     newPeer.on('stream', (remoteStream) => {
+      console.log('Received remote stream');
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStream;
+        remoteVideoRef.current.play().catch(e => console.error('Remote play error:', e));
       }
     });
 
     setPeer(newPeer);
-  };
-
-  const handleOffer = (signal: Peer.SignalData) => {
-    if (peer) {
-      peer.signal(signal);
-    }
   };
 
   const sendMessage = () => {
@@ -195,6 +220,7 @@ export default function VideoChat() {
 
     // Send message to server
     socket.emit('send-message', { message, roomId });
+    console.log('Sending message:', message);
     
     // Add message to local state
     setMessages(prev => [...prev, message]);
@@ -279,16 +305,9 @@ export default function VideoChat() {
         </div>
       )}
 
-      {!isJoined ? (
+      <div className={isJoined ? 'hidden' : ''}>
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold mb-4">Join Video Chat</h1>
-          <input
-            type="text"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            placeholder="Enter room ID"
-            className="w-full p-2 mb-4 border rounded"
-          />
           <input
             type="text"
             value={userName}
@@ -296,128 +315,146 @@ export default function VideoChat() {
             placeholder="Enter your name"
             className="w-full p-2 mb-4 border rounded"
           />
+          <input
+            type="text"
+            value={roomId}
+            onChange={(e) => setRoomId(e.target.value)}
+            placeholder="Enter room ID"
+            className="w-full p-2 mb-4 border rounded"
+          />
           <button
             onClick={joinRoom}
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+            disabled={!userName || !roomId || isLoading}
+            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
           >
-            Join Room
+            {isLoading ? 'Connecting...' : 'Join Room'}
           </button>
         </div>
-      ) : (
-        <div className="max-w-6xl mx-auto grid grid-cols-3 gap-4">
-          <div className="col-span-2 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative bg-black rounded-lg overflow-hidden h-[400px]">
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-                  You ({userName})
-                </div>
-                {!localVideoRef.current?.srcObject && <div className="text-white">No local stream</div>}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-4">
-                  <button
-                    onClick={toggleVideo}
-                    className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700"
-                  >
-                    {isVideoEnabled ? <Video size={20} /> : <VideoOff size={20} />}
-                  </button>
-                  <button
-                    onClick={toggleAudio}
-                    className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700"
-                  >
-                    {isAudioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
-                  </button>
-                  <button
-                    onClick={endCall}
-                    className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
-                  >
-                    <Phone size={20} />
-                  </button>
-                </div>
-              </div>
-              <div className="relative bg-black rounded-lg overflow-hidden h-[400px]">
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-                {!remoteVideoRef.current?.srcObject && <div className="text-white">No remote stream</div>}
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-4 flex flex-col h-[600px]">
-            <div className="flex-1 overflow-y-auto mb-4 space-y-2">
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`p-2 rounded-lg ${
-                    msg.sender === socket?.id
-                      ? 'bg-blue-500 text-white ml-auto'
-                      : 'bg-gray-200'
-                  } max-w-[80%]`}
-                >
-                  <div className="text-xs opacity-75 mb-1">
-                    {msg.sender === socket?.id ? 'You' : msg.senderName}
-                  </div>
-                  {msg.text}
-                  {msg.file && (
-                    <div className="mt-2">
-                      {msg.file.type.startsWith('image/') ? (
-                        <img 
-                          src={msg.file.url} 
-                          alt={msg.file.name} 
-                          className="max-w-full rounded"
-                        />
-                      ) : (
-                        <a 
-                          href={msg.file.url} 
-                          download={msg.file.name}
-                          className="text-blue-600 underline"
-                        >
-                          Download {msg.file.name}
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="Type a message..."
-                className="flex-1 p-2 border rounded"
+      </div>
+
+      {/* Always render video elements */}
+      <div className={!isJoined ? 'hidden' : 'max-w-6xl mx-auto grid grid-cols-3 gap-4'}>
+        <div className="col-span-2 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="relative bg-black rounded-lg overflow-hidden h-[400px]">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+                style={{ transform: 'scaleX(-1)' }}
               />
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  accept="image/*,.pdf,.doc,.docx"
-                />
-                <div className="p-2 bg-gray-200 rounded hover:bg-gray-300">
-                  📎
+              <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                You ({userName})
+              </div>
+              {!localVideoRef.current?.srcObject && (
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  No local stream
                 </div>
-              </label>
-              <button
-                onClick={sendMessage}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Send
-              </button>
+              )}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-4">
+                <button
+                  onClick={toggleVideo}
+                  className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700"
+                >
+                  {isVideoEnabled ? <Video size={20} /> : <VideoOff size={20} />}
+                </button>
+                <button
+                  onClick={toggleAudio}
+                  className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700"
+                >
+                  {isAudioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
+                </button>
+                <button
+                  onClick={endCall}
+                  className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                >
+                  <Phone size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="relative bg-black rounded-lg overflow-hidden h-[400px]">
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              {!remoteVideoRef.current?.srcObject && (
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  Waiting for peer...
+                </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+        <div className="bg-white rounded-lg shadow-md p-4 flex flex-col h-[600px]">
+          <div className="flex-1 overflow-y-auto mb-4 space-y-2">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`p-2 rounded-lg ${
+                  msg.sender === socket?.id
+                    ? 'bg-blue-500 text-white ml-auto'
+                    : 'bg-gray-200'
+                } max-w-[80%]`}
+              >
+                <div className="text-xs opacity-75 mb-1">
+                  {msg.sender === socket?.id ? 'You' : msg.senderName}
+                </div>
+                {msg.text}
+                {msg.file && (
+                  <div className="mt-2">
+                    {msg.file.type.startsWith('image/') ? (
+                      <img 
+                        src={msg.file.url} 
+                        alt={msg.file.name} 
+                        className="max-w-full rounded"
+                      />
+                    ) : (
+                      <a 
+                        href={msg.file.url} 
+                        download={msg.file.name}
+                        className="text-blue-600 underline"
+                      >
+                        Download {msg.file.name}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Type a message..."
+              className="flex-1 p-2 border rounded"
+            />
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleFileSelect}
+                accept="image/*,.pdf,.doc,.docx"
+              />
+              <div className="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                📎
+              </div>
+            </label>
+            <button
+              onClick={sendMessage}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
