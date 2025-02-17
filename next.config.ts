@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
       'picsum.photos', // Allowing picsum.photos for doctor images
       'via.placeholder.com', // Allowing placeholder.com for fallback images
       'th.bing.com',
+      'images.unsplash.com',
+      's3-alpha-sig.figma.com',
+      'i.pinimg.com'
     ],
   },
   webpack: (config, { isServer }) => {
