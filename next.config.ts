@@ -2,16 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [ 'example.com', // Example of a domain
-      'i.pinimg.com', // Pinterest
-      'images.unsplash.com', // Unsplash
-      'cdn.example.com', // Another example
-      'mycdn.com', // Custom CDN
+    domains: [
+      'example.com',
+      'i.pinimg.com',
+      'images.unsplash.com',
+      'cdn.example.com',
+      'mycdn.com',
       'assets.example.com', 
       'images.pexels.com',
     ],
-  }, 
-    optimizeFonts: false,
+  },
   async rewrites() {
     return [
       {
@@ -20,7 +20,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Add hostname configuration
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = { fs: false, net: false, tls: false };
