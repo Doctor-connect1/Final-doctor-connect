@@ -25,13 +25,11 @@ const LoginForm = () => {
             if (data.token) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('role', data.role);
+                router.push('/');
             }
-
             if (!response.ok) {
                 throw new Error(data.message);
             }
-            // Redirect to dashboard or home page
-            router.push('/');
 
         } catch (error: any) {
             setError(error.message);
