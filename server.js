@@ -36,7 +36,9 @@ io.on('connection', (socket) => {
 
     socket.on('send-message', ({ message, roomId }) => {
         socket.to(roomId).emit('message', message);
-        console.log(`Message sent to room ${roomId}:`, message);
+        console.log(`Message sent to room ${roomId}:`, 
+            message.file ? `File: ${message.file.name}` : message.text
+        );
     });
 
     socket.on('offer', ({ signal, room }) => {

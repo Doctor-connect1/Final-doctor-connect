@@ -9,6 +9,11 @@ interface Message {
   text: string;
   sender: string;
   senderName: string;
+  file?: {
+    name: string;
+    url: string;
+    type: string;
+  };
 }
 
 export default function VideoChat() {
@@ -25,6 +30,7 @@ export default function VideoChat() {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [videoQuality, setVideoQuality] = useState<'low' | 'medium' | 'high'>('medium');
   const [userName, setUserName] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -120,16 +126,19 @@ export default function VideoChat() {
 
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        },
         audio: true
       });
       
-      console.log('Media stream tracks:', mediaStream.getTracks());
+      console.log('Got media stream:', mediaStream.getTracks());
       
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = mediaStream;
-        await localVideoRef.current.play().catch(e => console.error('Play error:', e));
-        console.log('Local video playing');
+        localVideoRef.current.play().catch(e => console.error('Play error:', e));
       }
       
       setStream(mediaStream);
@@ -180,7 +189,7 @@ export default function VideoChat() {
 
     const message: Message = {
       text: inputMessage,
-      sender: socket.id,
+      sender: socket?.id ?? '',
       senderName: userName
     };
 
@@ -223,6 +232,37 @@ export default function VideoChat() {
     setIsJoined(false);
     setStream(null);
     setPeer(null);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      sendFile(file);
+    }
+  };
+
+  const sendFile = async (file: File) => {
+    if (!socket || !userName || !roomId) return;
+
+    // Convert file to base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const message: Message = {
+        text: `Sent a file: ${file.name}`,
+        sender: socket?.id ?? '',
+        senderName: userName,
+        file: {
+          name: file.name,
+          url: e.target?.result as string,
+          type: file.type
+        }
+      };
+
+      socket.emit('send-message', { message, roomId });
+      setMessages(prev => [...prev, message]);
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -274,8 +314,10 @@ export default function VideoChat() {
                   playsInline
                   muted
                   className="w-full h-full object-cover"
-                  style={{ transform: 'scaleX(-1)' }}
                 />
+                <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                  You ({userName})
+                </div>
                 {!localVideoRef.current?.srcObject && <div className="text-white">No local stream</div>}
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-4">
                   <button
@@ -298,7 +340,7 @@ export default function VideoChat() {
                   </button>
                 </div>
               </div>
-              <div className="bg-black rounded-lg overflow-hidden h-[400px]">
+              <div className="relative bg-black rounded-lg overflow-hidden h-[400px]">
                 <video
                   ref={remoteVideoRef}
                   autoPlay
@@ -320,7 +362,29 @@ export default function VideoChat() {
                       : 'bg-gray-200'
                   } max-w-[80%]`}
                 >
+                  <div className="text-xs opacity-75 mb-1">
+                    {msg.sender === socket?.id ? 'You' : msg.senderName}
+                  </div>
                   {msg.text}
+                  {msg.file && (
+                    <div className="mt-2">
+                      {msg.file.type.startsWith('image/') ? (
+                        <img 
+                          src={msg.file.url} 
+                          alt={msg.file.name} 
+                          className="max-w-full rounded"
+                        />
+                      ) : (
+                        <a 
+                          href={msg.file.url} 
+                          download={msg.file.name}
+                          className="text-blue-600 underline"
+                        >
+                          Download {msg.file.name}
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -332,8 +396,18 @@ export default function VideoChat() {
                 onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="Type a message..."
                 className="flex-1 p-2 border rounded"
-                disabled={isLoading}
               />
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                  accept="image/*,.pdf,.doc,.docx"
+                />
+                <div className="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                  📎
+                </div>
+              </label>
               <button
                 onClick={sendMessage}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
