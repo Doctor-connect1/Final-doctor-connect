@@ -7,10 +7,12 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const id = parseInt(params.id);
+  // Await params before accessing id
+  const { id } = await params;  // Ensure params is awaited
 
-    if (isNaN(id)) {
+  const parsedId = parseInt(id);
+  try {
+    if (isNaN(parsedId)) {
       return NextResponse.json({ 
         success: false, 
         error: 'Invalid patient ID' 
@@ -18,7 +20,7 @@ export async function GET(
     }
 
     const patient = await prisma.patient.findUnique({
-      where: { id },
+      where: { id: parsedId },
       include: {
         profileMedia: true,
         user: {
@@ -53,17 +55,25 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  const { id } = params;
+
   try {
-    const id = parseInt(params.id);
+    const parsedId = parseInt(id);
     const body = await request.json();
     
-    const { firstName, lastName, medicalHistory } = body;
+    const { 
+      firstName, 
+      lastName, 
+      phone,
+      medicalHistory,
+      bio 
+    } = body;
 
-    if (isNaN(id)) {
+    if (isNaN(parsedId)) {
       return NextResponse.json({ 
         success: false, 
         error: 'Invalid patient ID' 
@@ -72,12 +82,17 @@ export async function PATCH(
 
     // Update only the specified fields
     const updatedPatient = await prisma.patient.update({
-      where: { id },
+      where: { id: parsedId },
       data: {
-        firstName,
-        lastName,
-        medicalHistory,
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(phone && { phone }),
+        ...(medicalHistory && { medicalHistory }),
+        ...(bio && { bio })
       },
+      include: {
+        profileMedia: true // Include profile media in response
+      }
     });
 
     return NextResponse.json({ 
@@ -94,4 +109,4 @@ export async function PATCH(
   } finally {
     await prisma.$disconnect();
   }
-} 
+}

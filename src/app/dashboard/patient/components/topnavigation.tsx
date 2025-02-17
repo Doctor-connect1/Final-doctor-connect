@@ -2,7 +2,7 @@ import { FiSearch, FiBell } from "react-icons/fi";
 
 interface TopNavigationProps {
   patientName: string;
-  avatarUrl?: string;
+  avatarUrl: string | null;
 }
 
 const TopNavigation = ({ patientName, avatarUrl }: TopNavigationProps) => {
@@ -21,13 +21,17 @@ const TopNavigation = ({ patientName, avatarUrl }: TopNavigationProps) => {
           <div className="flex flex-col items-end">
             <span className="font-medium">Patient: {patientName}</span>
           </div>
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#007E85]">
-            <img
-              src={avatarUrl || "https://via.placeholder.com/40"}
-              alt="Profile"
-              className="w-full h-full object-cover"
+          {avatarUrl ? (
+            <img 
+              src={avatarUrl} 
+              alt={`${patientName}'s avatar`}
+              className="h-10 w-10 rounded-full"
             />
-          </div>
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-500">{patientName[0]}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
