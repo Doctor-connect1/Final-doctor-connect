@@ -24,6 +24,7 @@ const LoginForm = () => {
             const data = await response.json();
             if (data.token) {
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('role', data.role);
             }
 
             if (!response.ok) {
