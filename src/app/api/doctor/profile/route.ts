@@ -20,6 +20,7 @@ export async function GET(request: Request) {
       select: {
         firstName: true,
         lastName: true,
+        profilePicture: true,
       },
     });
 
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(doctor);
-  } catch (error) {
+  } catch  {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 }

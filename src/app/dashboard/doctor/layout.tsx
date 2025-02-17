@@ -10,7 +10,7 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [doctorName, setDoctorName] = useState("");
-
+  const [avatarUrl, setAvatarUrl] = useState("");
   useEffect(() => {
     const fetchDoctorName = async () => {
       try {
@@ -22,6 +22,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         });
         const data = await response.json();
         setDoctorName(`${data.firstName} ${data.lastName}`);
+        setAvatarUrl(data.profilePicture);
       } catch (error) {
         console.error("Error fetching doctor name:", error);
       }
@@ -35,7 +36,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <SideNavigation />
       <div className="flex-1 ml-32">
         <div className="min-h-screen bg-gray-50 rounded-l-[40px] p-8">
-          <TopNavigation doctorName={doctorName} />
+          <TopNavigation doctorName={doctorName} avatarUrl={avatarUrl} />
           <main className="mt-8">{children}</main>
         </div>
       </div>
