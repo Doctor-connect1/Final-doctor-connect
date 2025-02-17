@@ -12,20 +12,12 @@ const nextConfig: NextConfig = {
       'images.pexels.com',
     ],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/socket',
-        destination: 'http://192.168.11.12:4000',
-      },
-    ];
-  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = { fs: false, net: false, tls: false };
     }
     return config;
-  },
+  }
 };
 
 export default nextConfig;
