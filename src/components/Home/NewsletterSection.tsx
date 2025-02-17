@@ -9,16 +9,17 @@ export default function NewsletterSection() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (!email) {
+    // Basic email validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailPattern.test(email)) {
       setStatus('error');
-      setMessage('Please enter your email');
+      setMessage('Please enter a valid email address');
       return;
     }
 
     try {
       setStatus('loading');
       
-      // Replace this with your actual API endpoint
       const response = await fetch('/api/newsletter', {
         method: 'POST',
         headers: {
@@ -27,12 +28,14 @@ export default function NewsletterSection() {
         body: JSON.stringify({ email }),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Subscription failed');
+        throw new Error(data.message || 'Subscription failed');
       }
 
       setStatus('success');
-      setMessage('Thank you for subscribing!');
+      setMessage(data.message || 'Thank you for subscribing!');
       setEmail('');
       
       // Reset success message after 3 seconds
@@ -43,7 +46,7 @@ export default function NewsletterSection() {
 
     } catch (error) {
       setStatus('error');
-      setMessage('Something went wrong. Please try again.');
+      setMessage(error instanceof Error ? error.message : 'Something went wrong. Please try again.');
     }
   };
 

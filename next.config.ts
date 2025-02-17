@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       'mycdn.com',
       'assets.example.com', 
       'images.pexels.com',
+      'picsum.photos', // Allowing picsum.photos for doctor images
+      'via.placeholder.com', // Allowing placeholder.com for fallback images
+      'th.bing.com',
     ],
   },
   webpack: (config, { isServer }) => {

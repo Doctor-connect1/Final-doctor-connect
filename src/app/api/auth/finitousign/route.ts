@@ -69,8 +69,9 @@ export async function POST(request: Request) {
             );
         }
         // Create patient record
+        var patiente=null
         if (role === "Patient") {
-            await prisma.patient.create({
+            patiente= await prisma.patient.create({
                 data: {
                     userId: user.id,
                     medicalHistory,
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
         }
 
         // Create the payload object
-        const payload = { userId: user.id, role: role || "Patient" }; // Use actual role if passed or default to "Patient"
+        const payload = { userId: user.id,patientId:patiente.id, role: role || "Patient" }; // Use actual role if passed or default to "Patient"
         console.log('JWT Payload:', payload); // Log the payload to debug
 
         // Check if the payload is valid (should be an object)
