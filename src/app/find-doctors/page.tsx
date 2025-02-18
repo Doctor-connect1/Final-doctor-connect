@@ -3,10 +3,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { Search, MapPin, Star, Phone, Video, MessageCircle } from 'lucide-react';
+import Link from "next/link"
 import Navbar from '@/components/Home/Navbar';
 import Footer from '@/components/Home/Footer';
 import { Decimal } from '@prisma/client/runtime/library';
-
 interface Doctor {
   id: number;
   firstName: string;
@@ -126,20 +126,21 @@ export default function FindDoctors() {
 
                     {/* Call and Video Call Icons */}
                     <div className="flex space-x-4 mt-2">
-                      <button
+                      <Link
+                        href="video-chat"// Route to a message page or call logic
                         className="flex items-center text-blue-600 hover:text-blue-800"
-                        onClick={() => alert(`Calling ${doctor.phone}`)} // Add logic to handle phone calls
                       >
                         <MessageCircle className="h-5 w-5 mr-1" />
                         MSG
-                      </button>
-                      <button
+                      </Link>
+
+                      <Link
+                        href="video-chat" // Route to video call page
                         className="flex items-center text-green-600 hover:text-green-800"
-                        onClick={() => alert(`Video calling ${doctor.firstName} ${doctor.lastName}`)} // Add logic for video call
                       >
                         <Video className="h-5 w-5 mr-1" />
                         Video Call
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import PageContainer from "../components/PageContainer";
 import { FiSearch, FiFilter, FiTrash2 } from "react-icons/fi";
-
+import { Phone } from 'lucide-react'
+import Link from "next/link";
 const PatientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [patients, setPatients] = useState([]);
@@ -136,6 +137,9 @@ const PatientsPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Call
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -185,6 +189,11 @@ const PatientsPage = () => {
                         )}
                       </button>
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <Link href="/video-chat" passHref>
+                      <Phone className="h-4 w-4 text-blue-600" />
+                    </Link>
                   </td>
                 </tr>
               ))}

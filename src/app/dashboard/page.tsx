@@ -17,7 +17,7 @@ export default function DashboardPage() {
           throw new Error("No token found in local storage.");
         }
         const response = await fetch(
-          "http://localhost:3000/api/auth/verify-doctor",
+          "/api/auth/verify-doctor",
           {
             method: "POST",
             headers: {

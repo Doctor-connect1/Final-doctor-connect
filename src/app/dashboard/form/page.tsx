@@ -140,7 +140,7 @@ export default function Form() {
 
       const token = localStorage.getItem("token");
       const apiResponse = await fetch(
-        "https://localhost:3000/api/auth/become-doctor",
+        "/api/auth/become-doctor",
         {
           method: "POST",
           headers: {
@@ -380,10 +380,9 @@ export default function Form() {
                             key={index}
                             value={specialty}
                             className={({ active }) =>
-                              `p-3 cursor-pointer ${
-                                active
-                                  ? "bg-purple-50 text-purple-700"
-                                  : "text-gray-700"
+                              `p-3 cursor-pointer ${active
+                                ? "bg-purple-50 text-purple-700"
+                                : "text-gray-700"
                               }`
                             }
                           >
@@ -424,10 +423,9 @@ export default function Form() {
                             key={index}
                             value={experience}
                             className={({ active }) =>
-                              `p-3 cursor-pointer ${
-                                active
-                                  ? "bg-purple-50 text-purple-700"
-                                  : "text-gray-700"
+                              `p-3 cursor-pointer ${active
+                                ? "bg-purple-50 text-purple-700"
+                                : "text-gray-700"
                               }`
                             }
                           >
@@ -470,13 +468,12 @@ export default function Form() {
                 )}
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <motion.div
-                    className={`h-2.5 rounded-full ${
-                      passwordStrength === 3
+                    className={`h-2.5 rounded-full ${passwordStrength === 3
                         ? "bg-green-500"
                         : passwordStrength === 2
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
-                    }`}
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                      }`}
                     initial={{ width: "0%" }}
                     animate={{ width: `${(passwordStrength / 3) * 100}%` }}
                     transition={{ duration: 0.3 }}

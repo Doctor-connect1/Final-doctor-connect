@@ -1,18 +1,18 @@
 import nodemailer from 'nodemailer';
 export async function POST(request: Request) {
   const { firstName, lastName, email, phone, topic, message } = await request.json();
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: "zeinebbouganmi89@gmail.com",  
-    pass: "urac msax mzlj ogvu",  
-  },
-});
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: "bochrabenromdhane2003@gmail.com",
+      pass: "llqq ckaq bvly hryf ",
+    },
+  });
 
 
   const mailOptions = {
-    from: "zeinebboughanmi89@gmail.com",
-    to: "zeinebboughanmi89@gmail.com",
+    from: "bochrabenromdhane2003@gmail.com",
+    to: "bochrabenromdhane2003@gmail.com",
     subject: `New Contact Form Submission: ${topic}`,
     html: `
       <h2>New Contact Form Submission</h2>
