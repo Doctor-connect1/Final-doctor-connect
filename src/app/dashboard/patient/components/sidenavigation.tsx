@@ -20,9 +20,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { icon: FiGrid, href: "/dashboard/patient", label: "Dashboard" },
   { icon: FiCalendar, href: "/dashboard/patient/appointments", label: "Appointments" },
-  { icon: FiClock, href: "/dashboard/patient/medical-history", label: "Medical History" },
   { icon: FiUsers, href: "/dashboard/patient/Prescriptions", label: "Prescriptions" },
   { icon: FiSettings, href: "/dashboard/patient/Profile", label: "Profile" },
 ];
@@ -58,7 +56,7 @@ const SideNavigation = () => {
         <div className="mt-auto">
           <NavButton
             icon={FiLogOut}
-            href="/logout"
+            href="/"
             label="Logout"
             isActive={false}
           />
@@ -84,11 +82,10 @@ const NavButton = ({ icon: Icon, href, label, isActive }: NavButtonProps) => {
         whileTap={{ scale: 0.95 }}
       >
         <div
-          className={`p-3 rounded-xl transition-all duration-300 ${
-            isActive
-              ? "bg-white text-[#007E85] shadow-lg"
-              : "text-white hover:bg-white/10"
-          }`}
+          className={`p-3 rounded-xl transition-all duration-300 ${isActive
+            ? "bg-white text-[#007E85] shadow-lg"
+            : "text-white hover:bg-white/10"
+            }`}
         >
           <Icon size={20} />
         </div>

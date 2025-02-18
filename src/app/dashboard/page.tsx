@@ -44,7 +44,7 @@ export default function DashboardPage() {
       // Check the role in localStorage after animation
       const role = localStorage.getItem("role"); // Assuming role is stored in localStorage
       if (role === "Patient") {
-        router.push("/dashboard/patient");
+        router.push("/dashboard/patient/appointments");
       } else if (role === "Doctor" && userIsDoctor.current === true) {
         router.push("/dashboard/doctor");
       } else if (role === "Doctor" && userIsDoctor.current === false) {

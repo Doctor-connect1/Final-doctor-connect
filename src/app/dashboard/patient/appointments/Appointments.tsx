@@ -54,12 +54,14 @@ const Appointments = () => {
     const fetchAppointments = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log("Token:", token);
         if (!token) {
           setError('No authentication token found');
           return;
         }
 
         const decodedToken = jwtDecode<CustomJwtPayload>(token);
+        console.log("Decoded token:", decodedToken);
         if (!decodedToken.patientId) {
           setError('Invalid token format');
           return;
@@ -74,6 +76,7 @@ const Appointments = () => {
 
         // Then fetch appointments
         const appointmentsResponse = await fetch(`/api/patient/appointments/${decodedToken.patientId}`);
+        console.log("Appointments response:", appointmentsResponse);
         if (!appointmentsResponse.ok) {
           throw new Error('Failed to fetch appointments');
         }
@@ -132,8 +135,8 @@ const Appointments = () => {
             <p className="text-gray-500 text-center py-4">No appointments found</p>
           ) : (
             appointments.map((appointment) => (
-              <div 
-                key={appointment.id} 
+              <div
+                key={appointment.id}
                 className="flex items-center p-4 border rounded-lg hover:bg-gray-50"
               >
                 <div className="flex-shrink-0">
@@ -146,18 +149,18 @@ const Appointments = () => {
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
                       <span className="text-gray-500 text-lg">
-                        {appointment.doctor?.user?.firstName?.[0] || 'D'}
+                        {appointment.doctor.firstName}
                       </span>
                     </div>
                   )}
                 </div>
-                
+
                 <div className="ml-4 flex-1">
                   <div className="flex items-center">
                     <Calendar className="h-5 w-5 text-blue-600 mr-2" />
                     <div>
                       <h3 className="font-medium">
-                        Dr. {appointment.doctor?.user?.firstName} {appointment.doctor?.user?.lastName}
+                        Dr. {appointment.doctor.firstName} {appointment.doctor.lastName}
                       </h3>
                       <p className="text-sm text-gray-500">
                         {appointment.doctor?.specialty?.name || 'General Practice'}
@@ -182,13 +185,12 @@ const Appointments = () => {
                 </div>
 
                 <div className="flex-shrink-0">
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    appointment.status.toLowerCase() === 'confirmed' 
-                      ? 'bg-green-100 text-green-800'
-                      : appointment.status.toLowerCase() === 'pending'
+                  <span className={`px-3 py-1 rounded-full text-sm ${appointment.status.toLowerCase() === 'confirmed'
+                    ? 'bg-green-100 text-green-800'
+                    : appointment.status.toLowerCase() === 'pending'
                       ? 'bg-yellow-100 text-yellow-800'
                       : 'bg-red-100 text-red-800'
-                  }`}>
+                    }`}>
                     {appointment.status.toUpperCase()}
                   </span>
                 </div>
