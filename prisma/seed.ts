@@ -47,6 +47,7 @@ async function main() {
           specialty: faker.person.jobTitle(),
           experience: faker.number.int({ min: 1, max: 30 }),
           bio: user.bio || faker.lorem.paragraph(),
+          profilePicture: `https://randomuser.me/api/portraits/${faker.helpers.arrayElement(["men", "women"])}/${faker.number.int({ min: 0, max: 99 })}.jpg`,
           isVerified: faker.datatype.boolean(),
           locationLatitude: user.locationLatitude,
           locationLongitude: user.locationLongitude,
