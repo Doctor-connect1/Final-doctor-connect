@@ -34,11 +34,18 @@ const TopNavigation = ({ doctorName, avatarUrl }: TopNavigationProps) => {
             <span className="font-medium">Dr. {doctorName}</span>
           </div>
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#007E85]">
-            <img
-              src={avatarUrl || "https://via.placeholder.com/40"}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
+          {avatarUrl ? (
+  <img
+    src={avatarUrl}
+    alt="Profile"
+    className="w-full h-full object-cover"
+  />
+) : (
+  <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-sm">
+    waiting
+  </div>
+)}
+
           </div>
         </div>
       </div>

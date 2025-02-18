@@ -15,7 +15,8 @@ const nextConfig: NextConfig = {
       'th.bing.com',
       'images.unsplash.com',
       's3-alpha-sig.figma.com',
-      'i.pinimg.com'
+      'i.pinimg.com',
+      'res.cloudinary.com'
     ],
   },
   webpack: (config, { isServer }) => {

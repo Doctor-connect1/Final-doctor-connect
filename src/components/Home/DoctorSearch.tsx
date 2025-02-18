@@ -1,6 +1,6 @@
-'use client';
-import { useState, useEffect } from 'react';
-import Image from 'next/image'; // Import Image from Next.js
+"use client";
+import { useState, useEffect } from "react";
+import Image from "next/image"; // Import Image from Next.js
 
 type Doctor = {
   id: number;
@@ -15,8 +15,8 @@ type Doctor = {
 export default function DoctorSearch() {
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const [isAvailable, setIsAvailable] = useState(false); // Availability filter
-  const [name, setName] = useState(''); // Name search input
-  const [specialty, setSpecialty] = useState(''); // Specialty search input
+  const [name, setName] = useState(""); // Name search input
+  const [specialty, setSpecialty] = useState(""); // Specialty search input
   const [hasSearched, setHasSearched] = useState(false); // Track if the user has searched
 
   // Fetch doctors whenever search criteria change
@@ -40,10 +40,10 @@ export default function DoctorSearch() {
             setFilteredDoctors(filteredResults); // Update filtered doctors
             setHasSearched(true); // Mark that the user has searched
           } else {
-            console.error('Error fetching doctors');
+            console.error("Error fetching doctors");
           }
         } catch (error) {
-          console.error('Error fetching doctors:', error);
+          console.error("Error fetching doctors:", error);
         }
       };
 
@@ -79,12 +79,12 @@ export default function DoctorSearch() {
             <button
               onClick={() => setIsAvailable(!isAvailable)}
               className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                isAvailable ? 'bg-teal-600' : 'bg-gray-200'
+                isAvailable ? "bg-teal-600" : "bg-gray-200"
               }`}
             >
               <div
                 className={`bg-white w-4 h-4 rounded-full transform transition-transform duration-200 ease-in-out ${
-                  isAvailable ? 'translate-x-6' : 'translate-x-0'
+                  isAvailable ? "translate-x-6" : "translate-x-0"
                 }`}
               />
             </button>
@@ -96,7 +96,10 @@ export default function DoctorSearch() {
             filteredDoctors.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredDoctors.map((doctor) => (
-                  <div key={doctor.id} className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
+                  <div
+                    key={doctor.id}
+                    className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300"
+                  >
                     {/* Image container without fixed height */}
                     <div className="relative w-full aspect-square bg-gradient-to-b from-teal-50 to-white">
                       <Image
@@ -104,11 +107,12 @@ export default function DoctorSearch() {
                         alt={`${doctor.firstName} ${doctor.lastName}`}
                         fill // Use fill to make the image cover the container
                         sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw" // Use sizes attribute for responsive images
-                        style={{ objectFit: 'cover' }} // Ensure the image covers the container
+                        style={{ objectFit: "cover" }} // Ensure the image covers the container
                         className="rounded-t-lg" // Add rounded corners to the top of the image
                       />
                       <h3 className="absolute top-4 right-4 bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
-                        {doctor.isVerified ? 'Available' : 'Not Available'} {/* Use boolean isVerified directly */}
+                        {doctor.isVerified ? "Available" : "Not Available"}{" "}
+                        {/* Use boolean isVerified directly */}
                       </h3>
                     </div>
                     {/* Card content */}
@@ -116,8 +120,12 @@ export default function DoctorSearch() {
                       <h3 className="text-xl font-bold text-gray-900 mb-1">
                         {doctor.firstName} {doctor.lastName}
                       </h3>
-                      <p className="text-teal-600 font-medium mb-2">{doctor.specialty}</p>
-                      <p className="text-gray-600 text-sm mb-4">{doctor.experience} years of experience</p>
+                      <p className="text-teal-600 font-medium mb-2">
+                        {doctor.specialty}
+                      </p>
+                      <p className="text-gray-600 text-sm mb-4">
+                        {doctor.experience} years of experience
+                      </p>
                     </div>
                   </div>
                 ))}

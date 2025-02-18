@@ -41,7 +41,6 @@ export default function ProfilePage() {
     const fetchProfileData = async () => {
       try {
         const token = localStorage.getItem('token');
-        console.log('token:', token);
         if (!token) {
           throw new Error('No token found');
         }
@@ -50,7 +49,6 @@ export default function ProfilePage() {
         const decodedToken = jwtDecode<{ 
           patientId
           ?: string }>(token);
-console.log('decodedToken:', decodedToken);
         if (!decodedToken.
           patientId
           ) {
